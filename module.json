@@ -1,0 +1,32 @@
+{
+    "name": "ecommerce-invoices-and-documents",
+    "version": "0.1.0",
+    "description": "The document a sale produces and the number it is filed under: invoices, credit notes, receipts and proformas, frozen at issue, numbered per series, rendered through a seam and kept for as long as the law says.",
+    "category": "capability",
+    "provider": "Liberu\\Ecommerce\\InvoicesAndDocuments\\InvoicesAndDocumentsServiceProvider",
+    "requires": {
+        "packages": {}
+    },
+    "features": [
+        "Issue freezes: a document copies the seller, the buyer, every line description, quantity, unit price, tax rate and tax amount, the currency and the totals, and reads none of them from anywhere else again",
+        "An issued document has no update path and no delete path; the frozen columns are guarded on the model and a correction is another document, never an edit",
+        "A document is corrected by a credit note that references it, and the credit note copies the corrected document's identities rather than re-reading the sale",
+        "Credit notes may not exceed the document they correct, counting every credit note already issued against it",
+        "Totals are summed from the frozen lines every time they are asked for; no column holds a total that could drift away from what the document says",
+        "A draft is refused when the sale's stated totals disagree with the sum of its lines, so a document never issues with a header its lines contradict",
+        "Money is minor units, an ISO 4217 code and a stored exponent, together, on every figure; there is no decimal column and no currency inferred at render time",
+        "Tax is stated per line as net, rate, tax and gross, and summarised per distinct rate; the module adds recorded figures and never recomputes a tax",
+        "A number is spent inside the transaction that writes the document, under a row lock, so a rollback returns it rather than leaving a hole",
+        "Gaplessness is a per-series policy: a gapless series refuses to burn a number, and any other series records the burn rather than leaving a silent hole",
+        "A proforma may not be filed under a fiscal series, and an unnumbered proforma is still a document",
+        "Four kinds and one state machine: draft to issued to delivered, and void from any of them, where void records the reason and keeps the number",
+        "Every mutation returns an outcome distinguishing recorded, already recorded and refused-because; no write is a silent no-op",
+        "The cause is the natural key: one document per tenant, kind and source reference, arbitrated by a unique index rather than a read-then-write",
+        "Rendering is an unbound seam that produces no file when nobody is bound, and a declined render is a different answer from an unasked one",
+        "A delivery attempt is a row before it is a transmission, and delivered is what a transport answered rather than what dispatching implied",
+        "Retention outranks erasure: contact details and notes are always redacted, and buyer identity on a document still inside its retention window is refused, by name",
+        "A retention window the host never configured is unknown rather than zero, and erasure refuses on that basis rather than guessing",
+        "Export and erasure walk the same person-wide set across every tenant, so the two agree about what everything means",
+        "Every table carries tenant_id NOT NULL with no default, and every relation restates it under a guard that survives withCount"
+    ]
+}
