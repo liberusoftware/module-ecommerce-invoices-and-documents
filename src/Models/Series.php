@@ -28,14 +28,6 @@ class Series extends Model
 
     protected $fillable = ['tenant_id', 'code', 'prefix', 'pad', 'next_value', 'fiscal', 'gapless'];
 
-    protected $attributes = [
-        'prefix' => '',
-        'pad' => 0,
-        'next_value' => 1,
-        'fiscal' => true,
-        'gapless' => true,
-    ];
-
     protected $casts = [
         'pad' => 'integer',
         'next_value' => 'integer',

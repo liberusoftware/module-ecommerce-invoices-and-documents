@@ -16,7 +16,6 @@ enum RefusalReason: string
     case SeriesRequired = 'series_required';
     case ProformaMayNotUseFiscalSeries = 'proforma_may_not_use_fiscal_series';
     case SeriesIsGapless = 'series_is_gapless';
-    case NotDraft = 'not_draft';
     case NotIssued = 'not_issued';
     case IllegalTransition = 'illegal_transition';
     case NotCorrectable = 'not_correctable';
@@ -27,5 +26,4 @@ enum RefusalReason: string
     case NoDeliveryAddress = 'no_delivery_address';
     case TransportFailed = 'transport_failed';
     case TransportSuppressed = 'transport_suppressed';
-    case WithinRetentionWindow = 'within_retention_window';
 }
