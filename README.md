@@ -1,84 +1,52 @@
-# Ecommerce: Invoices And Documents Core Module
+# Ecommerce — Invoices and Documents
 
-> This package is the authoritative, provider-neutral implementation of Invoices And Documents. It owns domain behavior and data; optional API, Filament, Livewire, React, Vue, and Nuxt packages translate its public contracts for their surfaces.
+The document a sale produces, and the number that document is filed under.
 
-[Software](https://liberusoftware.com) ·
-[Hosting](https://liberuhosting.com) ·
-[Services](https://liberuservices.com) ·
-[Liberu Group](https://liberugroup.com)
+## The fact that shaped it
 
-![PHP](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php&logoColor=white) ![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
-[![Latest release](https://img.shields.io/github/v/release/liberusoftware/module-ecommerce-invoices-and-documents?sort=semver)](https://github.com/liberusoftware/module-ecommerce-invoices-and-documents/releases/latest) [![Tests](https://github.com/liberusoftware/module-ecommerce-invoices-and-documents/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/liberusoftware/module-ecommerce-invoices-and-documents/actions/workflows/tests.yml)
+The host application's invoice was a live view of the catalogue and the customer, not a document.
+Its lines were a `belongsToMany` straight onto `Product`, so renaming a product rewrote every past
+invoice that contained it; deleting one removed lines from a header total that carried on printing;
+and GDPR erasure redacted the customer row in place, so every invoice ever issued to that person
+resolved to "Deleted / User". There was no number column at all — the customer-facing "Invoice #"
+was the `invoices` primary key, shared across every merchant on the deployment.
 
-## Features
+A document that changes after it is issued is not a document. **Issue freezes.** Everything a
+document will ever display is copied at issue into rows this module owns, and after that no other
+module's data can alter what it says.
 
-- Fully compatible with **Laravel 13**, **PHP 8.5**, and **Pest 5**.
-- Built following the domain-driven design guidelines of the Liberu architecture.
-- Reusable, presenting a clean public contract and boundaries.
-- Adheres to the strict database, security, and authorization standards of Liberu.
+## What it owns
 
-## Requirements
+| | |
+|---|---|
+| `invoicing_series` | A numbering series per tenant: prefix, pad, next value, fiscal, gapless |
+| `invoicing_documents` | The issued document, its frozen parties, its currency, its number, its state |
+| `invoicing_document_lines` | The frozen lines: description, quantity, unit price, net, rate, tax, gross |
+| `invoicing_document_events` | Append-only history; every state move writes one |
+| `invoicing_deliveries` | One row per attempt to put the document in front of somebody |
+| `invoicing_burned_numbers` | A number spent on nothing, on the record |
 
-- **PHP 8.5**
-- **Composer 2**
-- A supported database (e.g. MySQL, PostgreSQL, SQLite)
+## What it does not own
 
-## Quick start
+Orders, payments, refunds, tax calculation, customers, mail transports and PDF libraries. A refund
+is money moving and belongs to `refunds`; a **credit note is a document about money having moved**
+and is this module's. A payment belongs to `payment-operations`; the **receipt** is this module's.
+A tax figure in `tax` is a claim that can be superseded; the figure a document records was what was
+actually charged and is never superseded — a superseded quote justifies a credit note instead.
 
-To install this package via Composer, run:
+## What it publishes
 
-```bash
-composer require liberusoftware/module-ecommerce-invoices-and-documents
-```
+| Kind | Names |
+|---|---|
+| Actions | `OpenSeries` `DraftDocument` `DraftCreditNote` `IssueDocument` `VoidDocument` `RecordDelivery` `BurnNumber` `ForgetParticipant` |
+| Queries | `FindDocument` `ListDocuments` `SummariseDocument` `BuildRenderModel` `RenderDocument` `CheckSeriesContinuity` `ExportParticipantRecord` |
+| Contracts | `SaleSource` `DocumentRenderer` `DocumentTransport` — none bound by default |
+| Data | `Money` `Line` `Party` `Sale` `Outcome` `DocumentSummary` `TaxRateTotal` `RenderModel` `RenderResult` `Rendered` `TransportOutcome` `ParticipantRecord` `ExportedDocument` `ForgetReport` `RetentionRefusal` `ContinuityReport` |
+| Events | `DocumentIssued` `DocumentVoided` `DocumentDelivered` `DeliveryFailed` `NumberBurned` `ParticipantForgotten` |
+| Policy | `CustodyPolicy` — every check takes the tenant |
 
-## Documentation
+Every mutation returns an `Outcome` that says which of three things happened: recorded, already
+recorded, or refused and why. There is no `void` return and no silent no-op.
 
-- [Liberu Main Documentation](https://github.com/liberusoftware/documentation)
-- [Architecture & Standards Index](https://github.com/liberusoftware/documentation/tree/main/architecture)
-
-## Related Liberu Projects
-
-| Project | Repository | Purpose |
-| --- | --- | --- |
-| **Boilerplate** | [liberusoftware/boilerplate-laravel](https://github.com/liberusoftware/boilerplate-laravel) | Shared Laravel application foundation and reference composition |
-| **CMS** | [liberu-cms/cms-laravel](https://github.com/liberu-cms/cms-laravel) | Structured content, publishing, media, multisite, and headless delivery |
-| **CRM** | [liberu-crm/crm-laravel](https://github.com/liberu-crm/crm-laravel) | Customer data, sales, marketing, service, and customer success |
-| **Billing** | [liberu-billing/billing-laravel](https://github.com/liberu-billing/billing-laravel) | Products, subscriptions, invoicing, payments, and provisioning |
-| **Accounting** | [liberu-accounting/accounting-laravel](https://github.com/liberu-accounting/accounting-laravel) | Ledgers, banking, tax, expenses, close, and financial reporting |
-| **Ecommerce** | [liberu-ecommerce/ecommerce-laravel](https://github.com/liberu-ecommerce/ecommerce-laravel) | Catalog, checkout, orders, fulfillment, returns, B2B, and omnichannel commerce |
-| **Control Panel** | [liberu-control-panel/control-panel-laravel](https://github.com/liberu-control-panel/control-panel-laravel) | Hosting, infrastructure, DNS, mail, databases, backups, and security operations |
-| **Automation** | [liberu-automation/automation-laravel](https://github.com/liberu-automation/automation-laravel) | Governed workflows, provider-neutral AI, approvals, and connectors |
-
-## Security
-
-Please do not report security vulnerabilities through public GitHub issues.
-Follow our [Security Policy](https://github.com/liberusoftware/documentation/blob/main/architecture/SECURITY.md) for private reporting and supported versions.
-
-## License
-
-This project is open-source software. You may use, modify, and distribute it
-under the terms described in [LICENSE.md](LICENSE.md).
-
-The linked license text is authoritative; this summary is not legal advice.
-
-## Feedback and contributing
-
-Feedback and contributions are welcome. You can help by reporting reproducible
-bugs, proposing focused enhancements, improving documentation or translations,
-and submitting tested code changes.
-
-Before contributing, please read [CONTRIBUTING.md](https://github.com/liberusoftware/documentation/blob/main/standards/CONTRIBUTING.md) and our
-[Code of Conduct](https://github.com/liberusoftware/documentation/blob/main/architecture/CODE_OF_CONDUCT.md). Search existing issues first, then use
-the appropriate issue template. Pull requests should explain the problem and
-approach, remain focused, include or update tests, pass the required workflows,
-and document user-visible or breaking changes.
-
-## Contributors
-
-Thank you to everyone who helps improve Liberu.
-
-<a href="https://github.com/liberusoftware/module-ecommerce-invoices-and-documents/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=liberusoftware/module-ecommerce-invoices-and-documents" alt="Contributors to liberusoftware/module-ecommerce-invoices-and-documents">
-</a>
-
-[View the full contributors graph](https://github.com/liberusoftware/module-ecommerce-invoices-and-documents/graphs/contributors).
+`docs/domain.md` carries the decisions, `docs/adoption.md` how a host installs it and what it
+deletes, `docs/runbook.md` what breaks and what to do about it.
